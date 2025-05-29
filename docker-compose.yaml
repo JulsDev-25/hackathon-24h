@@ -3,10 +3,7 @@ volumes:
   grafana_data:
 
 networks:
-  frontend:
   backend:
-  reverse_proxy:
-  monitoring:
 
 services:
   db:
@@ -36,7 +33,6 @@ services:
       - db
     networks:
       - backend
-      - reverse_proxy
 
   client:
     build: ./client
@@ -50,8 +46,7 @@ services:
     depends_on:
       - server
     networks:
-      - frontend
-      - reverse_proxy
+      - backend
 
   pgadmin:
     image: dpage/pgadmin4
@@ -76,8 +71,7 @@ services:
       - client
       - server
     networks:
-      - reverse_proxy
-      - frontend
+      - backend
 
   monitoring_prometheus:
     image: prom/prometheus
@@ -87,7 +81,6 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - monitoring
       - backend
 
   monitoring_grafana:
@@ -98,4 +91,4 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
-      - monitoring
+      - backend
