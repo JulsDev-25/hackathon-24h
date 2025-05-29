@@ -1,0 +1,101 @@
+volumes:
+  pgdata:
+  grafana_data:
+
+networks:
+  frontend:
+  backend:
+  reverse_proxy:
+  monitoring:
+
+services:
+  db:
+    image: postgres:15
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_DB: taskdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+
+  server:
+    build: ./server
+    container_name: server
+    command: poetry run python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./server:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - backend
+      - reverse_proxy
+
+  client:
+    build: ./client
+    container_name: client
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+    working_dir: /app
+    command: yarn dev --host
+    depends_on:
+      - server
+    networks:
+      - frontend
+      - reverse_proxy
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  proxy:
+    build:
+      context: ./proxy
+    container_name: proxy
+    ports:
+      - "80:80"
+    depends_on:
+      - client
+      - server
+    networks:
+      - reverse_proxy
+      - frontend
+
+  monitoring_prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+      - backend
+
+  monitoring_grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
