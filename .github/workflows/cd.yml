@@ -11,27 +11,20 @@ permissions:
   pull-requests: write
 
 jobs:
-  deploy:
-    name: Push dev to main after CI success
+  auto-merge-pr-to-dev:
+    name: Auto merge PR into dev after CI
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout full repo
-        uses: actions/checkout@v3
+      - name: Automerge PRs into dev
+        uses: ahmadnassri/action-auto-approve@v2 # pour approuver la PR si nécessaire
         with:
-          fetch-depth: 0 # pour avoir toutes les branches
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Merge dev into main and push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git checkout main
-          git pull origin main
-          git merge origin/dev --no-ff -m "CI auto-merge dev into main"
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} main
+      - name: Merge pull request into dev
+        uses: peter-evans/merge-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: squash # ou 'merge'
+          commit-message: pull-request-title
