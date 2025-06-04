@@ -12,7 +12,7 @@ RUN apt-get update \
 WORKDIR /app
 
 # Étape 4 : Copier les fichiers nécessaires à l’installation
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml ./
 
 # Étape 5 : Configuration de Poetry pour installer dans l’environnement global
 RUN poetry config virtualenvs.create false \
@@ -21,8 +21,4 @@ RUN poetry config virtualenvs.create false \
 # Étape 6 : Copier le reste de l'application
 COPY . .
 
-# Étape 7 : Exposer le port utilisé par Django (par défaut)
-EXPOSE 8000
 
-# Étape 8 : Commande de démarrage du serveur Django
-CMD ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]

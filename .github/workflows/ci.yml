@@ -1,0 +1,73 @@
+# .github/workflows/ci.yml
+name: CI Pipeline
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+jobs:
+  test:
+    name: Run backend tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: taskdb
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://user:password@localhost:5432/taskdb
+      PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry (2.1.2)
+        run: |
+          pip install --no-cache-dir poetry==2.1.2
+
+      - name: Install dependencies
+        working-directory: ./server
+        run: |
+          poetry config virtualenvs.create false
+          poetry install --no-root
+
+      - name: Run Django migrations check
+        working-directory: ./server
+        run: |
+          poetry run python manage.py makemigrations --check --dry-run
+
+      - name: Run tests with pytest
+        working-directory: ./server
+        run: |
+          poetry run pytest
+
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t mon-backend:latest ./server
