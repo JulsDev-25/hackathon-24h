@@ -1,4 +1,3 @@
-# .github/workflows/cd.yml
 name: CD Pipeline
 
 on:
@@ -11,22 +10,22 @@ jobs:
   deploy:
     name: Push dev to main after CI success
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/dev' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout dev branch
+      - name: Checkout full repo
         uses: actions/checkout@v3
         with:
-          ref: dev
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # pour avoir toutes les branches
 
-      - name: Configure Git
+      - name: Setup Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Push dev to main
+      - name: Merge dev into main
         run: |
-          git fetch origin
-          git checkout dev
-          git push origin dev:main
+          git checkout main
+          git pull origin main
+          git merge origin/dev --no-ff -m "CI auto-merge dev into main"
+          git push origin main
