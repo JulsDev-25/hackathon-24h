@@ -29,6 +29,8 @@ services:
       - ./server:/app
     ports:
       - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/taskdb
     depends_on:
       - db
     networks:
@@ -73,22 +75,22 @@ services:
     networks:
       - backend
 
-  monitoring_prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    networks:
-      - backend
+  # monitoring_prometheus:
+  #   image: prom/prometheus
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - backend
 
-  monitoring_grafana:
-    image: grafana/grafana
-    container_name: grafana
-    ports:
-      - "3001:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-    networks:
-      - backend
+  # monitoring_grafana:
+  #   image: grafana/grafana
+  #   container_name: grafana
+  #   ports:
+  #     - "3001:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   networks:
+  #     - backend
