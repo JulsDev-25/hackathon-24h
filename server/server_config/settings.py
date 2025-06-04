@@ -11,7 +11,7 @@ SECRET_KEY = 'django-insecure-f)$n@&#5(r!u2%rb9tw-z1v3q$=8d_jas)-s797t@bql$a=_dh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'server']
+ALLOWED_HOSTS = ['db', 'localhost', '127.0.0.1', 'server']
 
 # Application definition
 INSTALLED_APPS = [
@@ -64,7 +64,7 @@ default_db = {
 }
 
 DATABASES = {
-    'default': dj_database_url.config(default=None) or default_db
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'), conn_max_age=600) or default_db
 }
 
 # Password validation
