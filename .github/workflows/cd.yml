@@ -5,7 +5,7 @@ on:
     workflows: ["CI Pipeline"]
     types:
       - completed
-  
+
 permissions:
   contents: write
   pull-requests: write
@@ -27,7 +27,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Merge dev into main
+      - name: Merge dev into main and push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
