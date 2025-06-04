@@ -16,9 +16,9 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_DB: mydb
+          POSTGRES_DB: taskdb
           POSTGRES_USER: user
-          POSTGRES_PASSWORD: pass
+          POSTGRES_PASSWORD: password
         ports: ['5432:5432']
         options: >-
           --health-cmd pg_isready
@@ -27,7 +27,7 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgres://user:pass@localhost:5432/mydb
+      DATABASE_URL: postgres://user:password@localhost:5432/taskdb
       PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
 
     steps:
