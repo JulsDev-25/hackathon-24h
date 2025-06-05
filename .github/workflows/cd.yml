@@ -18,13 +18,14 @@ jobs:
           sleep 10
           docker compose ps
 
-      - name: Check if services are healthy
+      - name: Vérifier que tous les services sont en état Up
         run: |
-          services=$(docker compose ps | grep 'Up' | wc -l)
+          actual_up=$(docker compose ps --status=running --services | wc -l)
           expected=$(docker compose config --services | wc -l)
-          echo "Services running: $services / $expected"
-          if [ "$services" -lt "$expected" ]; then
-            echo "Not all services are running."
+          echo "Services en cours d’exécution : $actual_up / $expected"
+          if [ "$actual_up" -lt "$expected" ]; then
+            echo "Tous les services ne sont pas démarrés."
+            docker compose ps
             exit 1
           fi
 
