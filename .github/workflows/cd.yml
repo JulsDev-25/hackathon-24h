@@ -18,16 +18,21 @@ jobs:
           sleep 10
           docker compose ps
 
-      - name: Vérifier que tous les services sont en état Up
+      - name: Attendre que tous les services soient healthy (timeout 60s)
         run: |
-          actual_up=$(docker compose ps --status=running --services | wc -l)
-          expected=$(docker compose config --services | wc -l)
-          echo "Services en cours d’exécution : $actual_up / $expected"
-          if [ "$actual_up" -lt "$expected" ]; then
-            echo "Tous les services ne sont pas démarrés."
-            docker compose ps
-            exit 1
-          fi
+          timeout=60
+          interval=5
+          elapsed=0
+          until [ $(docker inspect --format='{{json .State.Health.Status}}' $(docker compose ps -q) | grep -c "healthy") -eq $(docker compose config --services | wc -l) ]; do
+            if [ $elapsed -ge $timeout ]; then
+              echo "Timeout: tous les services ne sont pas healthy après $timeout secondes."
+              docker compose ps
+              exit 1
+            fi
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+
 
   merge-to-main:
     needs: validate-compose
