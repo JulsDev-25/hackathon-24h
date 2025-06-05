@@ -47,6 +47,11 @@ services:
     command: yarn dev --host
     depends_on:
       - server
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5173 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - backend
 

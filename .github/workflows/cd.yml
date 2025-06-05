@@ -8,6 +8,25 @@ on:
 jobs:
   validate-compose:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: taskdb
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://user:password@localhost:5432/taskdb
+      PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
