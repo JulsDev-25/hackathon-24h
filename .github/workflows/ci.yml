@@ -1,4 +1,3 @@
-# .github/workflows/ci.yml
 name: CI Pipeline
 
 on:
@@ -6,8 +5,7 @@ on:
     branches: [dev]
 
 jobs:
-  test:
-    name: Run backend tests
+  test-and-build:
     runs-on: ubuntu-latest
 
     services:
@@ -37,9 +35,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Poetry (2.1.2)
-        run: |
-          pip install --no-cache-dir poetry==2.1.2
+      - name: Install Poetry
+        run: pip install poetry==2.1.2
 
       - name: Install dependencies
         working-directory: ./server
@@ -47,25 +44,26 @@ jobs:
           poetry config virtualenvs.create false
           poetry install --no-root
 
-      - name: Run Django migrations check
+      - name: Check Django migrations
         working-directory: ./server
         run: |
           poetry run python manage.py makemigrations --check --dry-run
 
-      - name: Run tests with pytest
+      - name: Run tests
         working-directory: ./server
         run: |
           poetry run pytest
 
-  build:
-    name: Build Docker image
+      - name: Build backend Docker image
+        run: docker build -t mon-backend:latest ./server
+
+  auto-merge:
+    needs: test-and-build
     runs-on: ubuntu-latest
-    needs: test
-
+    if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Build Docker image
-        run: |
-          docker build -t mon-backend:latest ./server
+      - name: Enable auto-merge
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: squash
