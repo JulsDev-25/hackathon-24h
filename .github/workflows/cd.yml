@@ -18,16 +18,31 @@ jobs:
           sleep 10
           docker compose ps
 
-      - name: Vérifier que tous les services sont en état Up
+      - name: Vérifier que tous les services sont en état Up (avec timeout)
         run: |
-          actual_up=$(docker compose ps --status=running --services | wc -l)
           expected=$(docker compose config --services | wc -l)
-          echo "Services en cours d’exécution : $actual_up / $expected"
-          if [ "$actual_up" -lt "$expected" ]; then
-            echo "Tous les services ne sont pas démarrés."
-            docker compose ps
-            exit 1
-          fi
+          timeout=30
+          interval=5
+          elapsed=0
+      
+          while [ $elapsed -lt $timeout ]; do
+            actual_up=$(docker compose ps --status=running --services | wc -l)
+            echo "→ $actual_up / $expected services sont 'Up' après $elapsed secondes"
+      
+            if [ "$actual_up" -eq "$expected" ]; then
+              echo "✅ Tous les services sont démarrés."
+              exit 0
+            fi
+      
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+      
+          echo "❌ Timeout atteint : tous les services ne sont pas 'Up'"
+          docker compose ps
+          docker compose logs --tail=50
+          exit 1
+
 
   merge-to-main:
     needs: validate-compose
