@@ -14,14 +14,14 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          docker compose -f docker-compose.yml up -d
+          docker compose -f docker-compose.yaml up -d
           sleep 10
           docker compose ps
 
       - name: Check if services are healthy
         run: |
-          services=$(docker-compose ps | grep 'Up' | wc -l)
-          expected=$(docker-compose config --services | wc -l)
+          services=$(docker compose ps | grep 'Up' | wc -l)
+          expected=$(docker compose config --services | wc -l)
           echo "Services running: $services / $expected"
           if [ "$services" -lt "$expected" ]; then
             echo "Not all services are running."
