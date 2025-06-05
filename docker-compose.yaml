@@ -1,6 +1,6 @@
 volumes:
   pgdata:
-  grafana_data:
+  # grafana_data:
 
 networks:
   backend:

@@ -33,7 +33,6 @@ jobs:
             elapsed=$((elapsed + interval))
           done
 
-
   merge-to-main:
     needs: validate-compose
     if: ${{ success() }}
