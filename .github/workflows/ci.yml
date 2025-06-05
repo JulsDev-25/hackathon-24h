@@ -67,15 +67,4 @@ jobs:
         with:
           pull-request-number: ${{ github.event.pull_request.number }}
           merge-method: squash
-
-jobs:
-  auto-merge:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Enable auto-merge
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          pull-request-number: ${{ github.event.pull_request.number }}
-          merge-method: squash
           token: ${{ secrets.PAT_TOKEN }}
