@@ -43,6 +43,7 @@ services:
       - "5173:5173"
     volumes:
       - ./client:/app
+      - /app/node_modules
     working_dir: /app
     command: yarn dev --host
     depends_on:
