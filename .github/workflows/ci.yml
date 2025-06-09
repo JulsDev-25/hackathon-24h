@@ -8,6 +8,29 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
 
+    services:
+      db:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: taskdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://user:password@localhost:5432/taskdb
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: taskdb
+      DB_USER: user
+      DB_PASSWORD: password
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -25,6 +48,19 @@ jobs:
         run: |
           poetry config virtualenvs.create false
           poetry install --no-root
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          for i in {1..15}; do
+            if PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c '\q'; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 5
+          done
 
       - name: Run tests
         working-directory: ./server
