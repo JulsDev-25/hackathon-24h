@@ -63,7 +63,7 @@ jobs:
         run: |
           git fetch origin
           git checkout main
-          git merge origin/dev --no-ff -m "Auto-merge dev into main after successful docker-compose check"
+          git merge origin/dev --no-ff --allow-unrelated-histories -m "Auto-merge dev into main after successful docker-compose check"
           git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }} main
 
   open-issue-on-failure:
