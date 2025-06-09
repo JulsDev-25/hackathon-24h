@@ -21,3 +21,15 @@ class AuthTests(TestCase):
         response = self.client.get(self.dashboard_url)
         self.assertEqual(response.status_code, 401)
         self.assertIn("error", response.json())
+
+    def test_dashboard_with_valid_token(self):
+        # Login pour obtenir le token
+        login_response = self.client.post(self.login_url, data=json.dumps({
+            "username": "testuser",
+            "password": "testpass"
+        }), content_type="application/json")
+        token = login_response.json()["token"]
+        # Accès dashboard avec token
+        response = self.client.get(self.dashboard_url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("user", response.json())
