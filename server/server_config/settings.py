@@ -1,6 +1,11 @@
 import os
 import dj_database_url
+import datetime
 from pathlib import Path
+
+JWT_SECRET = 'django-insecure-f)$n@&#5(r!u2%rb9tw-z1v3q$=8d_jas)-s797t@bql$a=_dh'
+JWT_ALGORITHM = "HS256"
+JWT_EXP_DELTA_SECONDS = 86400  # 24h
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,10 +26,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'task_manager'
+    'corsheaders',
+    'task_manager',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -32,7 +39,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'task_manager.middlewares.JWTAuthMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'server_config.urls'
 
