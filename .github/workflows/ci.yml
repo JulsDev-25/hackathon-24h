@@ -24,8 +24,8 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgres://user:password@db:5432/taskdb
-      DB_HOST: db
+      DATABASE_URL: postgres://user:password@localhost:5432/taskdb
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: taskdb
       DB_USER: user
