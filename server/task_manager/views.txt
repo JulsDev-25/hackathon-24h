@@ -9,6 +9,87 @@ import json
 import jwt
 from django.conf import settings
 
+#### Gestiion des projets  ####
+#* lister projects *#
+@csrf_exempt
+@require_http_methods(["GET"])
+def list_projects_view(request):
+    if not request.user:
+        return JsonResponse({"error": "Utilisateur non authentifié"}, status=401)
+    
+    projects = Project.objects.filter(created_by=request.user)
+    data = [{"id": p.id, "name": p.name, "description": p.description, "created_at": p.created_at} for p in projects]
+    return JsonResponse({"projects": data}, safe=False)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_project(request):
+    if not request.user:
+        return JsonResponse({"error": "Utilisateur non authentifié"}, status=401)   
+    try:
+        data = json.loads(request.body)
+        name = data.get("name")
+        description = data.get("description", "")
+        
+        if not name:
+            return HttpResponseBadRequest("Le nom du projet est requis !")
+        
+        project = Project.objects.create(
+            name=name,
+            description=description,
+            created_by=request.user
+        )
+        
+        return JsonResponse({
+            "id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "message": "Projet créé avec succès"
+        }, status=201)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400) 
+
+@csrf_exempt
+@require_http_methods(["PUT", "PATCH"])
+def update_project(request, project_id):
+    if not request.user:
+        return JsonResponse({"error": "Utilisateur non authentifié"})
+    
+    try:
+        project = Project.objects.get(id=project_id, created_by=request.user)
+        data = json.loads(request.body)
+        project.name = data.get("name", project.name)
+        project.description = data.get("description", project.description)
+        project.save()
+
+        return JsonResponse({
+            "id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "message": "Projet mis à jour avec succès"
+        }, status=200)
+    except Project.DoesNotExist:
+        return JsonResponse({"error": "Projet non trouvé"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def delete_project(request, project_id):
+    if not request.user:
+        return JsonResponse({"error": "Utilisateur non authentifié"}, status=401)   
+    
+    try:
+        project = Project.objects.get(id=project_id, created_by=request.user)
+        project.delete()
+        return JsonResponse({"message": "Projet supprimé avec succès"}, status=204)
+    except Project.DoesNotExist:
+        return JsonResponse({"error": "Projet non trouvé"}, status=404) 
+
+
+### Gestiion des des tâches du projet ###
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def tasks_view(request):
@@ -26,7 +107,7 @@ def tasks_view(request):
             project_id = data.get("project")
 
             if not title or not project_id:
-                return HttpResponseBadRequest("Title and projet are required !")
+                return HttpResponseBadRequest("Title and project are required !")
             
             project = Project.objects.get(id=project_id)
             assigned_to = User.objects.get(id=assigned_to_id) if assigned_to_id else None
@@ -35,8 +116,8 @@ def tasks_view(request):
                 title=title,
                 description=description,
                 status=status,
-                assigned_to=assigned_to_id,
-                project=project_id
+                assigned_to=assigned_to,
+                project=project
             )
 
             return JsonResponse({
@@ -85,6 +166,7 @@ def task_detail_view(request, task_id):
         return JsonResponse({"message": "Task deleted successfully"})
     
 
+### Dashboard sécurisé avec JWT ###
 @csrf_exempt
 @require_http_methods(['GET'])
 def dashboard_view(request):

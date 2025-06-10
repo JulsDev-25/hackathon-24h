@@ -18,6 +18,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['db', 'localhost', '127.0.0.1', 'server']
 
+AUTH_USER_MODEL = 'task_manager.User'
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -93,5 +95,3 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = 'static/'
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

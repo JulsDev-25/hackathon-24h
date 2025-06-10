@@ -1,21 +1,25 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
+from .utils.jwt_auth import login_required_jwt
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 import json
-from .utils.jwt import generate_jwt
+from .utils.jwt import generate_jwt, decode_jwt  # Assure-toi d'avoir decode_jwt
+
+User = get_user_model()  # Utilise le modèle d'utilisateur personnalisé défini dans settings.py
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def register_view(request):
     try:
         data = json.loads(request.body)
+
         username = data.get("username")
         password = data.get("password")
         confirm_password = data.get("confirmPassword")
-        first_name = data.get("firstname")
-        last_name = data.get("lastname")
+        first_name = data.get("firstName")  # <-- harmoniser avec camelCase
+        last_name = data.get("lastName")
         email = data.get("email")
 
         # Vérifications
@@ -31,19 +35,20 @@ def register_view(request):
         if User.objects.filter(email=email).exists():
             return JsonResponse({"error": "Email déjà utilisé"}, status=409)
 
-        # Création de l'utilisateur
         user = User.objects.create_user(
             username=username,
             password=password,
             first_name=first_name,
-            last_name=last_name,
+            last_name=last_name or "",
             email=email
         )
 
         return JsonResponse({"message": "Utilisateur enregistré avec succès"}, status=201)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Requête invalide"}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-
 
 
 @csrf_exempt
@@ -56,24 +61,35 @@ def login_view(request):
 
         user = authenticate(username=username, password=password)
         if user is None:
-            return JsonResponse({"error": "Email ou mot de passe incorrect !"}, status=401)
+            return JsonResponse({"error": "Nom d'utilisateur ou mot de passe incorrect"}, status=401)
 
         token = generate_jwt(user)
-        return JsonResponse({"token": token}, status=200)
+        return JsonResponse({
+            "token": token,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+            }
+        }, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Requête invalide"}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 @require_http_methods(["GET"])
+@login_required_jwt
 def me_view(request):
-    user = getattr(request, 'user', None)
-
-    if not user or not user.is_authenticated:
-        return JsonResponse({"error": "Non autorisé"}, status=401)
-
+    user = request.user
     return JsonResponse({
         "id": user.id,
         "username": user.username,
-        "email": user.email
+        "email": user.email,
+        "firstName": user.first_name,
+        "lastName": user.last_name,
     })

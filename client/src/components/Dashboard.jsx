@@ -3,6 +3,7 @@ import axios from "axios";
 import { AppBar, Toolbar, Typography, Button, Box, Paper, Grid, List, ListItem, ListItemText } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
+import Projects from "./Projets";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -45,7 +46,9 @@ const Dashboard = () => {
               Bonjour, {user.username}
             </Typography>
           )}
-          <LogoutButton />
+          {!user && (
+            <LogoutButton />
+          )}
         </Toolbar>
       </AppBar>
 
@@ -54,44 +57,7 @@ const Dashboard = () => {
           Mes Projets
         </Typography>
         <Grid container spacing={3}>
-          {projects.length === 0 && (
-            <Grid item xs={12}>
-              <Paper sx={{ p: 3, textAlign: "center" }}>
-                <Typography>Aucun projet pour le moment.</Typography>
-              </Paper>
-            </Grid>
-          )}
-          {projects.map((project) => (
-            <Grid item xs={12} md={6} key={project.id}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" color="primary">
-                  {project.name}
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  {project.description}
-                </Typography>
-                <Typography variant="subtitle2" sx={{ mt: 2 }}>
-                  Tâches :
-                </Typography>
-                <List dense>
-                  {project.tasks && project.tasks.length > 0 ? (
-                    project.tasks.map((task) => (
-                      <ListItem key={task.id} sx={{ pl: 0 }}>
-                        <ListItemText
-                          primary={task.title}
-                          secondary={`Statut : ${task.status} | Assigné à : ${task.assigned_to || "Non assigné"}`}
-                        />
-                      </ListItem>
-                    ))
-                  ) : (
-                    <ListItem sx={{ pl: 0 }}>
-                      <ListItemText primary="Aucune tâche." />
-                    </ListItem>
-                  )}
-                </List>
-              </Paper>
-            </Grid>
-          ))}
+          <Projects />
         </Grid>
       </Box>
     </Box>
