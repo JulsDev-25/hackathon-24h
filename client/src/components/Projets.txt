@@ -1,0 +1,79 @@
+// src/components/Projects.js
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import AlertMessage from "./AlertMessage";
+
+const Projects = () => {
+    const [projects, setProjects] = useState([]);
+    const [newProject, setNewProject] = useState({ name: "", description: "" });
+    const token = localStorage.getItem("token");
+    const [alert, setAlert] = useState({ message: '', type: 'success' });
+    const [alertVisible, setAlertVisible] = useState(false)
+
+    // charger les projets
+    useEffect(() => {
+        fetchProjects();
+    }, []);
+    const fetchProjects = () => {
+        axios
+            .get("/api/projects/", {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            .then((res) => setProjects(res.data))
+            .catch((err) => setAlert({ message: err.response?.data?.error || "Erreur lors du chargement des projets", type: 'error' }));
+    };
+
+    // creer un nouveau projet
+    const createProject = (e) => {
+        e.preventDefault();
+        axios
+            .post("/api/projects/create/", newProject, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            })
+            .then(() => {
+                fetchProjects();
+                setNewProject({ name: "", description: "" });
+            })
+            .catch((err) => setAlert({ message: err.response?.data?.error || "Erreur lors de la création du projet", type: 'error' }));
+        setAlertVisible(true);
+    };
+
+    const deleteProject = (id) => {
+        axios
+            .delete(`/api/projects/${id}/delete/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            .then(() => fetchProjects())
+            .catch((err) => console.error(err));
+    };
+
+    return (
+        <div>
+            <AlertMessage
+                message={alert.message}
+                type={alert.type}
+                visible={alertVisible}
+                onClose={() => {
+                    setAlertVisible(false);
+                    setAlert({ message: '', type: 'success' });
+                }}
+            />
+            <h2>Vos projets</h2>
+
+            <ul>
+                {projects.map((proj) => (
+                    <li key={proj.id}>
+                        <strong>{proj.name}</strong>
+                        <p>{proj.description}</p>
+                        <button onClick={() => deleteProject(proj.id)}>Supprimer</button>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+export default Projects;

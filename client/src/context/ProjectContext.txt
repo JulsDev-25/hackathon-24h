@@ -1,0 +1,32 @@
+import { createContext, useState, useEffect } from "react";
+import axios from "axios";
+
+export const ProjectContext = createContext();
+
+export const ProjectProvider = ({ children }) => {
+  const [projects, setProjects] = useState([]);
+  const token = localStorage.getItem("token");
+
+  const fetchProjects = async () => {
+    if (!token) return;
+
+    try {
+      const response = await axios.get("/api/projects/", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProjects(response.data);
+    } catch (err) {
+      console.error("Erreur de chargement des projets :", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, [token]);
+
+  return (
+    <ProjectContext.Provider value={{ projects, fetchProjects }}>
+      {children}
+    </ProjectContext.Provider>
+  );
+};
